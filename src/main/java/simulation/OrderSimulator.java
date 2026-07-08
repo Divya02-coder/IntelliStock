@@ -1,6 +1,5 @@
 package simulation;
 
-import jdbc.ProductRepository;
 import jdbc.SalesRepository;
 import service.InventoryService;
 import products.Product;

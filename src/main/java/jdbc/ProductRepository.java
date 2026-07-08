@@ -1,6 +1,5 @@
 package jdbc;
 import java.sql.*;
-import java.time.LocalDate;
 
 import products.ApparelProduct;
 import products.ElectronicsProduct;
@@ -70,4 +69,28 @@ if (product instanceof ApparelProduct) {
         }
         return null; // Return null if product isn't found
     }
+    public java.util.List<Product> findAll() throws SQLException {
+
+    java.util.List<Product> products = new java.util.ArrayList<>();
+
+    String sql = "SELECT * FROM products";
+
+    try (Connection conn = DatabaseManager.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+
+        while (rs.next()) {
+
+            try {
+                products.add(ProductFactory.createProductFromRow(rs));
+            } catch (Exception e) {
+                System.out.println("Skipping invalid row: " + e.getMessage());
+            }
+
+        }
+
+    }
+
+    return products;
+}
 }

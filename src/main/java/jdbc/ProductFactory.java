@@ -4,9 +4,7 @@ import products.ApparelProduct;
 import products.ElectronicsProduct;
 import products.PerishableProduct;
 import products.Product;
-import exception.DatabaseConnectionException;
 import exception.InvalidProductException;
-import exception.InventoryException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

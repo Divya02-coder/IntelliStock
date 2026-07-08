@@ -1,6 +1,5 @@
 package products;
 import exception.*;
-import pricing.*;
 import java.time.Month;
 
 public class ApparelProduct extends Product {

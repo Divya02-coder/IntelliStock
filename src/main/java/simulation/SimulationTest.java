@@ -4,9 +4,7 @@ import jdbc.SalesRepository;
 import products.ApparelProduct;
 import products.ElectronicsProduct;
 import service.InventoryService;
-import simulation.ConsoleAlertLogger;
-import simulation.OrderSimulator;
-import simulation.StockMonitor;
+// OrderSimulator and StockMonitor are in the same package (simulation), imports are unnecessary
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -43,6 +41,7 @@ public class SimulationTest {
             // Start Threads
             String[] targetSkus = {"APP-SHOES-05", "ELE-EAR-09"};
             OrderSimulator consumerTask = new OrderSimulator(inventoryService, salesRepo, targetSkus);
+            
             StockMonitor supplierTask = new StockMonitor(inventoryService);
 
             Thread consumerThread = new Thread(consumerTask, "ConsumerThread");

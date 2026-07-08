@@ -1,7 +1,6 @@
 package products;
 
 import exception.*;
-import pricing.*;
 
 /* 
   An electronics item - e.g. phones, laptops, accessories.
