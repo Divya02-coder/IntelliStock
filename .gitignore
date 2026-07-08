@@ -1,0 +1,21 @@
+# Java
+bin/
+out/
+*.class
+
+# VS Code
+.vscode/
+
+# IntelliJ
+.idea/
+
+# SQLite database
+*.db
+*.db-journal
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
