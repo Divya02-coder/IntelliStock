@@ -1,96 +1,199 @@
 package jdbc;
-import java.sql.*;
 
-import products.ApparelProduct;
-import products.ElectronicsProduct;
-import products.PerishableProduct;
 import products.Product;
-import exception.InvalidProductException;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProductRepository {
 
-    // 1. SAVE / INSERT a product into the database
-    public void save(Product product) throws SQLException {
-        String sql = "INSERT OR REPLACE INTO products (sku, category, name, quantity, cost_price, base_price, "
-                   + "reorder_threshold, size, season, warranty_months, brand, expiry_date) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    // Add Product
+    public void save(Product product) throws Exception {
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            // 1. Set common variables
-stmt.setString(1, product.getSku());
-stmt.setString(2, product.getCategory());
-stmt.setString(3, product.getName());
-stmt.setInt(4, product.getQuantity());
-stmt.setDouble(5, product.getCostPrice());
-stmt.setDouble(6, product.getBasePrice());
-stmt.setInt(7, product.getReorderThreshold());
+        Connection conn = DBConnection.getConnection();
 
-// 2. Clear all category fields by default using safe JDBC setNull types
-stmt.setNull(8, Types.VARCHAR);  // size
-stmt.setNull(9, Types.VARCHAR);  // season
-stmt.setNull(10, Types.INTEGER); // warranty_months
-stmt.setNull(11, Types.VARCHAR); // brand
-stmt.setNull(12, Types.VARCHAR); // expiry_date
+        String sql = "INSERT INTO products(name, category, price, quantity) VALUES (?, ?, ?, ?)";
 
-// 3. Overwrite only what's active
-if (product instanceof ApparelProduct) {
-    ApparelProduct apparel = (ApparelProduct) product;
-    stmt.setString(8, apparel.getSize());
-    stmt.setString(9, apparel.getSeason().name());
-} else if (product instanceof ElectronicsProduct) {
-    ElectronicsProduct electronics = (ElectronicsProduct) product;
-    stmt.setInt(10, electronics.getWarrantyMonths());
-    stmt.setString(11, electronics.getBrand());
-} else if (product instanceof PerishableProduct) {
-    PerishableProduct perishable = (PerishableProduct) product;
-    stmt.setString(12, perishable.getExpiryDate().toString());
-}
+        PreparedStatement ps = conn.prepareStatement(sql);
 
-            stmt.executeUpdate();
-        }
+        ps.setString(1, product.getName());
+        ps.setString(2, product.getCategory());
+        ps.setDouble(3, product.getPrice());
+        ps.setInt(4, product.getQuantity());
+
+        ps.executeUpdate();
+
+        System.out.println("Product Added Successfully.");
     }
+    public List<Product> lowStockProducts() throws Exception {
 
-    // 2. FIND a product out of the database by its SKU key
-    public Product findBySku(String sku) throws SQLException, InvalidProductException {
-        String sql = "SELECT * FROM products WHERE sku = ?;";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, sku);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    // Turn database row back into a real Java object using our factory
-                    return ProductFactory.createProductFromRow(rs);
-                }
-            }
-        }
-        return null; // Return null if product isn't found
-    }
-    public java.util.List<Product> findAll() throws SQLException {
+    Connection conn = DBConnection.getConnection();
 
-    java.util.List<Product> products = new java.util.ArrayList<>();
+    List<Product> products = new ArrayList<>();
 
-    String sql = "SELECT * FROM products";
+    String sql = "SELECT * FROM products WHERE quantity < 5";
 
-    try (Connection conn = DatabaseManager.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql);
-         ResultSet rs = stmt.executeQuery()) {
+    Statement stmt = conn.createStatement();
 
-        while (rs.next()) {
+    ResultSet rs = stmt.executeQuery(sql);
 
-            try {
-                products.add(ProductFactory.createProductFromRow(rs));
-            } catch (Exception e) {
-                System.out.println("Skipping invalid row: " + e.getMessage());
-            }
+    while(rs.next()){
 
-        }
+        products.add(new Product(
+
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getString("category"),
+                rs.getDouble("price"),
+                rs.getInt("quantity")
+
+        ));
 
     }
 
     return products;
+
 }
+
+    // View Product by ID
+    public Product findById(int id) throws Exception {
+
+        Connection conn = DBConnection.getConnection();
+
+        String sql = "SELECT * FROM products WHERE id=?";
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+
+        ps.setInt(1, id);
+
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+
+            return new Product(
+
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("category"),
+                    rs.getDouble("price"),
+                    rs.getInt("quantity")
+
+            );
+
+        }
+
+        return null;
+    }
+
+    // View All Products
+    public List<Product> findAll() throws Exception {
+
+        Connection conn = DBConnection.getConnection();
+
+        List<Product> products = new ArrayList<>();
+
+        String sql = "SELECT * FROM products";
+
+        Statement stmt = conn.createStatement();
+
+        ResultSet rs = stmt.executeQuery(sql);
+
+        while (rs.next()) {
+
+            products.add(
+
+                    new Product(
+
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("category"),
+                            rs.getDouble("price"),
+                            rs.getInt("quantity")
+
+                    )
+
+            );
+
+        }
+
+        return products;
+
+    }
+
+    // Update Product
+    public void update(Product product) throws Exception {
+
+        Connection conn = DBConnection.getConnection();
+
+        String sql = "UPDATE products SET name=?, category=?, price=?, quantity=? WHERE id=?";
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+
+        ps.setString(1, product.getName());
+        ps.setString(2, product.getCategory());
+        ps.setDouble(3, product.getPrice());
+        ps.setInt(4, product.getQuantity());
+        ps.setInt(5, product.getId());
+
+        ps.executeUpdate();
+
+        System.out.println("Product Updated Successfully.");
+
+    }
+
+    // Delete Product
+    public void delete(int id) throws Exception {
+
+        Connection conn = DBConnection.getConnection();
+
+        String sql = "DELETE FROM products WHERE id=?";
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+
+        ps.setInt(1, id);
+
+        ps.executeUpdate();
+
+        System.out.println("Product Deleted Successfully.");
+
+    }
+
+    // Search Product
+    public List<Product> searchByName(String name) throws Exception {
+
+        Connection conn = DBConnection.getConnection();
+
+        List<Product> products = new ArrayList<>();
+
+        String sql = "SELECT * FROM products WHERE name LIKE ?";
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+
+        ps.setString(1, "%" + name + "%");
+
+        ResultSet rs = ps.executeQuery();
+
+        while (rs.next()) {
+
+            products.add(
+
+                    new Product(
+
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("category"),
+                            rs.getDouble("price"),
+                            rs.getInt("quantity")
+
+                    )
+
+            );
+
+        }
+
+        return products;
+
+    }
+
 }

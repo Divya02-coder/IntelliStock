@@ -1,21 +1,7 @@
-# Java
-bin/
-out/
+target/
 *.class
-
-# VS Code
-.vscode/
-
-# IntelliJ
+.settings/
+.project
+.classpath
 .idea/
-
-# SQLite database
-*.db
-*.db-journal
-
-# Python
-__pycache__/
-*.pyc
-
-# Logs
-*.log
+.vscode/
