@@ -1,36 +1,91 @@
-import sqlite3
+
+import mysql.connector
 import pandas as pd
 import matplotlib.pyplot as plt
 
-conn = sqlite3.connect("intellistock.db")
 
-sales = pd.read_sql_query(
-    """
-    SELECT sku,
-           SUM(quantity) as total_sales
+# -----------------------------
+# MySQL Database Connection
+# -----------------------------
+try:
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Devashri236*",
+        database="intellistock"
+    )
+
+    print("Connected to MySQL successfully.")
+
+except mysql.connector.Error as err:
+    print(f"Database connection failed: {err}")
+    exit()
+
+
+# -----------------------------
+# Fetch Sales Data
+# -----------------------------
+query = """
+    SELECT
+        sku,
+        SUM(quantity) AS total_sales
     FROM sales
     GROUP BY sku
-    """,
-    conn
-)
+    ORDER BY total_sales DESC
+"""
 
+try:
+    sales = pd.read_sql(query, conn)
+
+except Exception as err:
+    print(f"Error fetching sales data: {err}")
+    conn.close()
+    exit()
+
+
+# -----------------------------
+# Display Sales Data
+# -----------------------------
+print("\nTotal Sales per Product:")
 print(sales)
 
-plt.figure(figsize=(8,5))
 
-plt.bar(
-    sales["sku"],
-    sales["total_sales"]
-)
+# -----------------------------
+# Sales Visualization
+# -----------------------------
+if not sales.empty:
 
-plt.title("Total Sales per Product")
-plt.xlabel("SKU")
-plt.ylabel("Units Sold")
+    plt.figure(figsize=(10, 6))
 
-plt.tight_layout()
+    plt.bar(
+        sales["sku"].astype(str),
+        sales["total_sales"]
+    )
 
-plt.savefig("sales_dashboard.png", dpi=300)
+    plt.title("Total Sales per Product")
+    plt.xlabel("SKU")
+    plt.ylabel("Units Sold")
 
-plt.show()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
 
+    # Save dashboard image
+    plt.savefig(
+        "sales_dashboard.png",
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.show()
+
+else:
+    print("No sales data available for analysis.")
+
+
+# -----------------------------
+# Close Database Connection
+# -----------------------------
 conn.close()
+
+print("\nMySQL connection closed.")
+
