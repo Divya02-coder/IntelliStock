@@ -1,4 +1,3 @@
-
 import mysql.connector
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -27,10 +26,13 @@ except mysql.connector.Error as err:
 # -----------------------------
 query = """
     SELECT
-        sku,
-        SUM(quantity) AS total_sales
-    FROM sales
-    GROUP BY sku
+        p.id AS product_id,
+        p.name AS product_name,
+        SUM(s.quantity) AS total_sales
+    FROM sales s
+    JOIN products p
+        ON s.product_id = p.id
+    GROUP BY p.id, p.name
     ORDER BY total_sales DESC
 """
 
@@ -58,18 +60,17 @@ if not sales.empty:
     plt.figure(figsize=(10, 6))
 
     plt.bar(
-        sales["sku"].astype(str),
+        sales["product_name"],
         sales["total_sales"]
     )
 
     plt.title("Total Sales per Product")
-    plt.xlabel("SKU")
+    plt.xlabel("Product")
     plt.ylabel("Units Sold")
 
     plt.xticks(rotation=45)
     plt.tight_layout()
 
-    # Save dashboard image
     plt.savefig(
         "sales_dashboard.png",
         dpi=300,
@@ -88,4 +89,3 @@ else:
 conn.close()
 
 print("\nMySQL connection closed.")
-
