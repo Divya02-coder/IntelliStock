@@ -1,280 +1,112 @@
-# IntelliStock — AI-Powered Inventory Management
+# IntelliStock — Inventory Management System
 
-**Smarter inventory. Better decisions. Less guesswork.**
+IntelliStock is an inventory management application built with Java and MySQL. It helps manage product records, monitor stock levels, process sales, and provide inventory insights through a Python analytics dashboard.
 
-IntelliStock is a full-stack inventory management platform designed to help retail businesses manage products, track sales, monitor performance, and make data-driven inventory decisions. It combines an interactive dashboard with analytics, demand forecasting, and role-based access control.
+## Features
 
-## Key Features
-
-- **Inventory Management** — Manage products and maintain inventory records.
-- **Sales & Billing** — Track sales, transactions, invoices, and customer workflows.
-- **Analytics Dashboard** — Monitor business KPIs, trends, and performance.
-- **AI-Powered Forecasting** — Analyze historical data to forecast demand and support inventory planning.
-- **Smart Reorder Insights** — Use forecasting insights to make more informed replenishment decisions.
-- **Role-Based Access Control** — Support separate admin, staff, and customer roles.
-- **Reports & Audit Logs** — Track business activity and access reporting features.
-- **REST API Documentation** — Explore API endpoints through Swagger UI.
+- **Product Management:** Add, view, update, delete, and search products.
+- **Inventory Tracking:** Maintain product quantities and update stock levels.
+- **Low-Stock Alerts:** Identify products with quantities below the configured threshold of 10 units.
+- **Sales Processing:** Validate available stock and deduct quantities when recording sales.
+- **Database Integration:** Store inventory information in MySQL.
+- **Analytics Dashboard:** Use Python to analyze sales data and visualize relevant insights, provided sales records are populated in the database.
+- **Service Layer:** Separate business logic from database operations using `InventoryService` and `ProductRepository`.
+- **Automated Testing:** Use JUnit 5 and Maven to test service behavior.
 
 ## Tech Stack
 
-| Layer | Technologies |
+| Technology | Purpose |
 |---|---|
-| Frontend | React 18, Vite, Tailwind CSS |
-| UI & Charts | Framer Motion, Recharts |
-| Backend | Node.js, Express 5 |
-| Database | PostgreSQL |
-| Authentication | JWT |
-| Machine Learning | Python, FastAPI, Pandas, NumPy, scikit-learn |
-| Database Integration | SQLAlchemy, psycopg2 |
-| API Documentation | Swagger UI |
+| Java 21 | Application logic |
+| JDBC | Database connectivity |
+| MySQL | Inventory and sales database |
+| Maven | Dependency management and build |
+| JUnit 5 | Automated unit tests |
+| Python | Sales analytics |
+| Pandas / Matplotlib | Data analysis and visualization, if used by the dashboard |
 
-## Architecture
+## Project Structure
 
 ```text
 IntelliStock/
-├── client/          # React frontend
-├── server/          # Express REST API
-├── ml-service/     # Python forecasting service
-├── package.json
-├── SETUP.sh
+├── src/
+│   ├── main/
+│   │   └── java/
+│   │       ├── jdbc/
+│   │       │   ├── DBConnection.java
+│   │       │   └── ProductRepository.java
+│   │       ├── products/
+│   │       │   └── Product.java
+│   │       ├── service/
+│   │       │   └── InventoryService.java
+│   │       └── Main.java
+│   └── test/
+│       └── java/
+│           └── service/
+│               └── InventoryServiceTest.java
+├── analytics.py
+├── mysql.sql
+├── pom.xml
 └── README.md
 ```
 
-**How it works**
+*The structure above reflects the expected layout. Adjust filenames if your local project differs.*
 
-1. The React frontend communicates with the backend through REST APIs.
-2. The Express backend handles authentication, business logic, and database operations.
-3. PostgreSQL stores application data.
-4. The FastAPI machine-learning service provides forecasting and analytical results.
-5. The backend integrates with the ML service using API-key authentication.
+## Prerequisites
 
-## Getting Started
+Install the following before running the project:
 
-### Prerequisites
+- Java Development Kit (JDK) 21
+- Apache Maven
+- MySQL Server
+- Python 3, if using the analytics dashboard
 
-Install the following before starting:
+## Setup and Installation
 
-- Node.js 18 or later
-- npm 9 or later
-- Python 3.10 or later
-- PostgreSQL 13 or later
-
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Divya02-coder/IntelliStock.git
 cd IntelliStock
 ```
 
-### 2. Install Dependencies
+### 2. Set up the MySQL database
 
-```bash
-npm install
-npm install --prefix client
-npm install --prefix server
-```
+1. Start your MySQL server.
+2. Open MySQL Workbench or your preferred MySQL client.
+3. Execute the SQL statements in `mysql.sql`.
+4. Confirm that the required database and tables have been created.
 
-Install the Python dependencies:
+Check that the table names and columns match those expected by `ProductRepository.java` and `analytics.py`.
 
-```bash
-cd ml-service
-python -m venv venv
-```
+### 3. Configure database credentials
 
-Activate the virtual environment.
+Set your database connection details in the application's configuration. The database password should be provided through an environment variable named `DB_PASSWORD`, rather than hardcoded in source files.
 
 **Windows PowerShell:**
 
 ```powershell
-.\venv\Scripts\Activate.ps1
+$env:DB_PASSWORD = Read-Host "Enter MySQL password"
 ```
 
-**Linux/macOS:**
+**Windows Command Prompt (CMD):**
+
+```cmd
+set DB_PASSWORD=your_mysql_password
+```
+
+Replace the placeholder with your actual password. Set any other connection variables required by `DBConnection.java`.
+
+Keep credentials private and never commit them to GitHub.
+
+### 4. Build the Java application
+
+From the directory containing `pom.xml`, run:
 
 ```bash
-source venv/bin/activate
+mvn clean compile
 ```
 
-Then install the dependencies:
+### 5. Run automated tests
 
 ```bash
-pip install -r requirements.txt
-cd ..
-```
-
-### 3. Configure Environment Variables
-
-Create the following environment files.
-
-**`server/.env`**
-
-```env
-PORT=5000
-NODE_ENV=development
-
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=intellistock
-DB_USER=postgres
-DB_PASSWORD=your_db_password
-
-CORS_ORIGIN=http://localhost:5173,http://localhost:3000,http://localhost:3001
-
-ML_API_KEY=replace_with_secure_key
-```
-
-**`ml-service/.env`**
-
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=intellistock
-DB_USER=postgres
-DB_PASSWORD=your_db_password
-
-ML_API_KEY=replace_with_secure_key
-```
-
-Use the same `ML_API_KEY` in both services.
-
-**`client/.env.local`**
-
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-Replace the example database credentials with your local PostgreSQL configuration. Never commit real secrets to GitHub.
-
-### 4. Set Up the Database
-
-Create a PostgreSQL database named `intellistock`, then execute the schema files in order:
-
-1. `server/db/schema.sql`
-2. `server/db/add-shop-and-customers.sql`
-
-Run any additional database scripts required by your checkout.
-
-### 5. Run the Application
-
-Start each service in a separate terminal from the project root.
-
-**Terminal 1 — Backend**
-
-```bash
-npm run dev:server
-```
-
-**Terminal 2 — Frontend**
-
-```bash
-npm run dev:client
-```
-
-**Terminal 3 — Machine Learning Service**
-
-```bash
-cd ml-service
-```
-
-Activate the Python virtual environment if necessary, then run:
-
-```bash
-uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-### 6. Access the Application
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:5173 |
-| Backend | http://localhost:5000 |
-| Database health | http://localhost:5000/health/db |
-| Swagger API docs | http://localhost:5000/api-docs |
-| ML service health | http://127.0.0.1:8000/ |
-
-These addresses assume the default local development configuration.
-
-## API Modules
-
-The backend organizes its REST API into modules including:
-
-- `/api/auth` — Authentication
-- `/api/products` — Product management
-- `/api/sales` — Sales and transactions
-- `/api/dashboard` — Dashboard data
-- `/api/analytics` — Business analytics
-- `/api/reports` — Reports
-- `/api/ml` — Machine-learning integration
-- `/api/notifications` — Notifications
-- `/api/audit-logs` — Audit records
-- `/api/shop` — Shop management
-- `/api/invoices` — Invoice workflows
-
-Explore the available endpoints at [Swagger UI](http://localhost:5000/api-docs) after starting the backend.
-
-## Machine Learning Integration
-
-The ML service supports forecasting and analytical operations, including:
-
-- Demand forecasting
-- Product-level forecasting
-- Trend analysis
-- Moving-average analysis
-- Seasonality analysis
-- Anomaly detection
-- Forecast-versus-actual comparisons
-- Growth-rate analysis
-
-The backend communicates with the ML service using the configured API key. Both services must be running and able to access the required database for the integrated workflow to function.
-
-## Useful Commands
-
-```bash
-# Start frontend
-npm run dev:client
-
-# Start backend
-npm run dev:server
-
-# Build frontend
-npm run build --prefix client
-
-# Start backend without development watch mode
-npm run start
-```
-
-## Security Notes
-
-- Use strong database credentials.
-- Generate a secure, private ML API key.
-- Change or disable demo credentials outside local development.
-- Restrict CORS to trusted origins in production.
-- Use HTTPS in deployed environments.
-- Keep `.env` files and other secrets out of version control.
-
-## Future Improvements
-
-Potential areas for further development include:
-
-- Barcode scanning and inventory automation
-- Low-stock alerts and configurable reorder thresholds
-- Enhanced forecasting evaluation and model monitoring
-- Automated testing and CI/CD
-- Cloud deployment and production monitoring
-
-## Contributing
-
-Contributions and suggestions are welcome.
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Make your changes and test the affected services.
-4. Submit a pull request with a clear description.
-
-## License
-
-No top-level license is currently documented. Add a `LICENSE` file before distributing the project under an open-source license.
-
----
-
-**Built with React, Node.js, PostgreSQL, and Python.**
