@@ -6,29 +6,22 @@ import java.sql.SQLException;
 
 public class DBConnection {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/intellistock";
-    private static final String USER = "root";          
-    private static final String PASSWORD = "Devashri236*";  
+    private static final String URL = System.getenv()
+            .getOrDefault("DB_URL", "jdbc:mysql://localhost:3306/intellistock");
 
-    private static Connection connection;
+    private static final String USER = System.getenv()
+            .getOrDefault("DB_USER", "root");
 
-    public static Connection getConnection() {
+    private static final String PASSWORD = System.getenv("DB_PASSWORD");
 
-        try {
+    private DBConnection() {
+    }
 
-            if (connection == null || connection.isClosed()) {
-
-                Class.forName("com.mysql.cj.jdbc.Driver");
-
-                connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            }
-
-        } catch (ClassNotFoundException | SQLException e) {
-
-            e.printStackTrace();
-
+    public static Connection getConnection() throws SQLException {
+        if (PASSWORD == null || PASSWORD.isBlank()) {
+            throw new SQLException("Please configure the DB_PASSWORD environment variable.");
         }
 
-        return connection;
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }

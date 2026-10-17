@@ -1,5 +1,5 @@
-import jdbc.ProductRepository;
 import products.Product;
+import service.InventoryService;
 
 import java.util.List;
 import java.util.Scanner;
@@ -7,150 +7,127 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
+        InventoryService service = new InventoryService();
 
-        Scanner sc = new Scanner(System.in);
-        ProductRepository repo = new ProductRepository();
+        try (Scanner sc = new Scanner(System.in)) {
+            while (true) {
+                System.out.println("\n=== IntelliStock Inventory ===");
+                System.out.println("1. Add Product");
+                System.out.println("2. View All Products");
+                System.out.println("3. Search Product");
+                System.out.println("4. Update Product");
+                System.out.println("5. Delete Product");
+                System.out.println("6. Record Sale");
+                System.out.println("7. Low Stock Products");
+                System.out.println("8. Exit");
+                System.out.print("Enter choice: ");
 
-        while (true) {
+                try {
+                    int choice = Integer.parseInt(sc.nextLine().trim());
 
-            System.out.println("\n====================================");
-            System.out.println("     IntelliStock Inventory");
-            System.out.println("====================================");
-            System.out.println("1. Add Product");
-            System.out.println("2. View All Products");
-            System.out.println("3. Search Product");
-            System.out.println("4. Update Product");
-            System.out.println("5. Delete Product");
-            System.out.println("6. Exit");
-            System.out.print("Enter your choice: ");
-
-            int choice = sc.nextInt();
-
-            try {
-
-                switch (choice) {
-
-                    case 1:
-
-                        System.out.print("Product Name: ");
-                        sc.nextLine();
-                        String name = sc.nextLine();
-
-                        System.out.print("Category: ");
-                        String category = sc.nextLine();
-
-                        System.out.print("Price: ");
-                        double price = sc.nextDouble();
-
-                        System.out.print("Quantity: ");
-                        int quantity = sc.nextInt();
-
-                        Product p = new Product(0, name, category, price, quantity);
-
-                        repo.save(p);
-
-                        break;
-
-                    case 2:
-
-                        List<Product> products = repo.findAll();
-
-                        if (products.isEmpty()) {
-                            System.out.println("No Products Found.");
-                        } else {
-
-                            System.out.println("\n------ Product List ------");
-
-                            for (Product product : products) {
-                                System.out.println(product);
-                            }
-
+                    switch (choice) {
+                        case 1 -> addProduct(sc, service);
+                        case 2 -> showProducts(service.getAllProducts());
+                        case 3 -> {
+                            System.out.print("Product name: ");
+                            showProducts(service.searchProduct(sc.nextLine()));
                         }
-
-                        break;
-
-                    case 3:
-
-                        System.out.print("Enter Product Name: ");
-                        sc.nextLine();
-                        String search = sc.nextLine();
-
-                        List<Product> result = repo.searchByName(search);
-
-                        if (result.isEmpty()) {
-
-                            System.out.println("No Product Found.");
-
-                        } else {
-
-                            for (Product product : result) {
-                                System.out.println(product);
-                            }
-
+                        case 4 -> updateProduct(sc, service);
+                        case 5 -> {
+                            System.out.print("Product ID: ");
+                            service.deleteProduct(readInt(sc));
+                            System.out.println("Product deleted.");
                         }
-
-                        break;
-
-                    case 4:
-
-                        System.out.print("Enter Product ID: ");
-                        int id = sc.nextInt();
-
-                        Product product = repo.findById(id);
-
-                        if (product == null) {
-
-                            System.out.println("Product Not Found.");
-
-                            break;
-
+                        case 6 -> recordSale(sc, service);
+                        case 7 -> showProducts(service.getLowStockProducts());
+                        case 8 -> {
+                            System.out.println("Goodbye.");
+                            return;
                         }
-
-                        System.out.print("New Name: ");
-                        sc.nextLine();
-                        product.setName(sc.nextLine());
-
-                        System.out.print("New Category: ");
-                        product.setCategory(sc.nextLine());
-
-                        System.out.print("New Price: ");
-                        product.setPrice(sc.nextDouble());
-
-                        System.out.print("New Quantity: ");
-                        product.setQuantity(sc.nextInt());
-
-                        repo.update(product);
-
-                        break;
-
-                    case 5:
-
-                        System.out.print("Enter Product ID: ");
-                        int deleteId = sc.nextInt();
-
-                        repo.delete(deleteId);
-
-                        break;
-
-                    case 6:
-
-                        System.out.println("Thank you for using IntelliStock.");
-                        sc.close();
-                        System.exit(0);
-
-                    default:
-
-                        System.out.println("Invalid Choice.");
-
+                        default -> System.out.println("Invalid choice.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Please enter a valid number.");
+                } catch (Exception e) {
+                    System.out.println("Error: " + e.getMessage());
                 }
-
-            } catch (Exception e) {
-
-                System.out.println("\nError: " + e.getMessage());
-
             }
+        }
+    }
 
+    private static void addProduct(
+            Scanner sc, InventoryService service) throws Exception {
+
+        System.out.print("Product name: ");
+        String name = sc.nextLine();
+
+        System.out.print("Category: ");
+        String category = sc.nextLine();
+
+        System.out.print("Price: ");
+        double price = Double.parseDouble(sc.nextLine());
+
+        System.out.print("Quantity: ");
+        int quantity = readInt(sc);
+
+        service.addProduct(
+                new Product(0, name, category, price, quantity));
+
+        System.out.println("Product added.");
+    }
+
+    private static void updateProduct(
+            Scanner sc, InventoryService service) throws Exception {
+
+        System.out.print("Product ID: ");
+        int id = readInt(sc);
+
+        Product product = service.getProduct(id);
+
+        if (product == null) {
+            System.out.println("Product not found.");
+            return;
         }
 
+        System.out.print("New name: ");
+        product.setName(sc.nextLine());
+
+        System.out.print("New category: ");
+        product.setCategory(sc.nextLine());
+
+        System.out.print("New price: ");
+        product.setPrice(Double.parseDouble(sc.nextLine()));
+
+        System.out.print("New quantity: ");
+        product.setQuantity(readInt(sc));
+
+        service.updateProduct(product);
+        System.out.println("Product updated.");
+    }
+
+    private static void recordSale(
+            Scanner sc, InventoryService service) throws Exception {
+
+        System.out.print("Product ID: ");
+        int id = readInt(sc);
+
+        System.out.print("Quantity sold: ");
+        int quantity = readInt(sc);
+
+        service.recordSale(id, quantity);
+        System.out.println("Sale recorded and stock updated.");
+    }
+
+    private static void showProducts(List<Product> products) {
+        if (products.isEmpty()) {
+            System.out.println("No products found.");
+            return;
+        }
+
+        products.forEach(System.out::println);
+    }
+
+    private static int readInt(Scanner sc) {
+        return Integer.parseInt(sc.nextLine().trim());
     }
 }
